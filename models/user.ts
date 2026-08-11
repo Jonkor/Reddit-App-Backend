@@ -1,12 +1,12 @@
-const mongoose = require('mongoose')
+import { InferSchemaType, model, Schema, Types } from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
   username: String,
   name: String,
   passwordHash: String,
   blogs: [
     {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: 'Blog'
     }
   ],
@@ -21,6 +21,10 @@ userSchema.set('toJSON', {
   }
 })
 
-const User = mongoose.model('User', userSchema)
+export type UserDocument = InferSchemaType<typeof userSchema> & {
+  _id: Types.ObjectId;
+};
 
-module.exports = User
+const User = model("User", userSchema);
+
+export default User;

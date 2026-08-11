@@ -1,4 +1,4 @@
-const listHelper = require('../utils/list_helper')
+import listHelper from "../utils/list_helper";
 
 const listWithOneBlog = [
     {
@@ -60,7 +60,7 @@ const listWithOneBlog = [
         __v: 0
       }  
     ]
-    const blogWithZeroItems = []
+    const blogWithZeroItems: typeof blogs = []
 
 
 test('dummy returns one', () => {

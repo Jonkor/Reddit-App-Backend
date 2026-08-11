@@ -1,9 +1,9 @@
-const mongoose = require('mongoose')
-const supertest = require('supertest')
-const app = require('../app')
-const helper = require('./test_helper')
-const bcrypt = require('bcryptjs')
-const User = require('../models/user')
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+import supertest from "supertest";
+import app from "../app";
+import User from "../models/user";
+import helper from "./test_helper";
 const api = supertest(app)
 
 

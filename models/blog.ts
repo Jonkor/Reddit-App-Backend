@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
+import { InferSchemaType, model, Schema, Types } from "mongoose";
 
-const commentSchema = new mongoose.Schema({
+const commentSchema = new Schema({
   content: String,
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
   },
 });
@@ -14,14 +14,14 @@ commentSchema.set("toJSON", {
     delete returnedObject.__v;
   },
 });
-const blogSchema = new mongoose.Schema({
+const blogSchema = new Schema({
   title: String,
   content: String,
   dateCreated: Date,
   likes: Number,
   comments: [commentSchema],
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
   },
 });
@@ -33,4 +33,8 @@ blogSchema.set("toJSON", {
   },
 });
 
-module.exports = mongoose.model("Blog", blogSchema);
+export type BlogDocument = InferSchemaType<typeof blogSchema> & {
+  _id: Types.ObjectId;
+};
+
+export default model("Blog", blogSchema);
