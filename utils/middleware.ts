@@ -1,6 +1,7 @@
-const logger = require('./logger')
+import { ErrorRequestHandler, RequestHandler } from "express";
+import logger from "./logger";
 
-const requestLogger = (request, response, next) => {
+const requestLogger: RequestHandler = (request, _response, next) => {
   logger.info('Method:', request.method)
   logger.info('Path:  ', request.path)
   logger.info('Body:  ', request.body)
@@ -8,11 +9,11 @@ const requestLogger = (request, response, next) => {
   next()
 }
 
-const unknownEndpoint = (request, response) => {
+const unknownEndpoint: RequestHandler = (_request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler: ErrorRequestHandler = (error, _request, response, next) => {
   logger.error(error.message)
 
   if (error.name === 'CastError') {
@@ -28,8 +29,4 @@ const errorHandler = (error, request, response, next) => {
   next(error)
 }
 
-module.exports = {
-  requestLogger,
-  unknownEndpoint,
-  errorHandler
-}
+export default { requestLogger, unknownEndpoint, errorHandler };

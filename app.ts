@@ -1,14 +1,15 @@
-const config = require("./utils/config");
-const express = require("express");
+import "express-async-errors";
+import cors from "cors";
+import express from "express";
+import mongoose from "mongoose";
+import blogRouter from "./controllers/blogs";
+import loginRouter from "./controllers/login";
+import usersRouter from "./controllers/users";
+import config from "./utils/config";
+import logger from "./utils/logger";
+import middleware from "./utils/middleware";
+
 const app = express();
-const cors = require("cors");
-require("express-async-errors");
-const blogRouter = require("./controllers/blogs");
-const usersRouter = require("./controllers/users");
-const loginRouter = require("./controllers/login");
-const middleware = require("./utils/middleware");
-const logger = require("./utils/logger");
-const mongoose = require("mongoose");
 
 logger.info("connecting to", config.MONGODB_URI);
 
@@ -40,4 +41,4 @@ app.use("/api/login", loginRouter);
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
 
-module.exports = app;
+export default app;
