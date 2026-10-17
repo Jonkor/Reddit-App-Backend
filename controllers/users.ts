@@ -11,11 +11,13 @@ interface CreateUserBody {
 const usersRouter = Router();
 
 usersRouter.get("/", async (_request, response) => {
-  const users = await User.find({}).populate("blogs", {
-    title: 1,
-    content: 1,
-    dateCreated: 1,
-    likes: 1,
+  const users = await User.find({}).populate({
+    path: "blogs",
+    select: "title content image dateCreated likes",
+    populate: {
+      path: "image",
+      select: "originalName contentType size status",
+    },
   });
   response.json(users);
 });

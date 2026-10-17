@@ -1,48 +1,50 @@
-import { Request, Router } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { Router } from "express";
+import { Types } from "mongoose";
 import Blog from "../models/blog";
+import Upload from "../models/upload";
 import User from "../models/user";
+import getUserToken from "../utils/auth";
 
 interface BlogBody {
   title?: string;
   content?: string;
+  imageId?: string | null;
   dateCreated?: Date | string;
   likes?: number;
   comments?: Array<{ content?: string; user?: string }>;
 }
 
-interface UserToken extends JwtPayload {
-  id: string;
-}
-
 const blogRouter = Router();
 
-const getUserToken = (request: Request): UserToken => {
-  const authorization = request.get("authorization");
-  const token =
-    authorization?.toLowerCase().startsWith("bearer ")
-      ? authorization.substring(7)
-      : undefined;
-  const secret = process.env.SECRET;
+const imageFields = "originalName contentType size status";
 
-  if (!token || !secret) {
-    throw new jwt.JsonWebTokenError("token missing or invalid");
-  }
+const resolveImage = async (
+  imageId: BlogBody["imageId"],
+  userId: string,
+): Promise<Types.ObjectId | null | undefined> => {
+  if (imageId === undefined) return undefined;
+  if (imageId === null) return null;
+  if (!Types.ObjectId.isValid(imageId)) return undefined;
 
-  const decoded = jwt.verify(token, secret);
-  if (typeof decoded === "string" || !decoded.id) {
-    throw new jwt.JsonWebTokenError("token missing or invalid");
-  }
-  return decoded as UserToken;
+  const image = await Upload.findOne({
+    _id: imageId,
+    owner: userId,
+    status: "ready",
+  });
+  return image?._id;
 };
 
 blogRouter.get("/", async (_request, response) => {
-  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
+  const blogs = await Blog.find({})
+    .populate("user", { username: 1, name: 1 })
+    .populate("image", imageFields);
   response.json(blogs);
 });
 
 blogRouter.get("/:id", async (request, response) => {
-  const blog = await Blog.findById(request.params.id);
+  const blog = await Blog.findById(request.params.id)
+    .populate("user", { username: 1, name: 1 })
+    .populate("image", imageFields);
   return blog ? response.json(blog.toJSON()) : response.status(404).end();
 });
 
@@ -57,10 +59,15 @@ blogRouter.post("/", async (request, response) => {
   if (!user) {
     return response.status(401).json({ error: "token missing or invalid" });
   }
+  const image = await resolveImage(body.imageId, decodedToken.id);
+  if (body.imageId && !image) {
+    return response.status(400).json({ error: "imageId must reference your completed upload" });
+  }
 
   const savedBlog = await new Blog({
     title: body.title,
     content: body.content,
+    image,
     dateCreated: body.dateCreated,
     likes: body.likes ?? 0,
     comments: body.comments ?? [],
@@ -69,6 +76,7 @@ blogRouter.post("/", async (request, response) => {
 
   user.blogs = user.blogs.concat(savedBlog._id);
   await user.save();
+  await savedBlog.populate("image", imageFields);
   return response.status(201).json(savedBlog);
 });
 
@@ -89,9 +97,13 @@ blogRouter.delete("/:id", async (request, response) => {
 
 blogRouter.put("/:id", async (request, response) => {
   const body = request.body as BlogBody;
-  getUserToken(request);
+  const decodedToken = getUserToken(request);
   if (!body.title) {
     return response.status(400).json({ error: "title is required" });
+  }
+  const image = await resolveImage(body.imageId, decodedToken.id);
+  if (body.imageId && !image) {
+    return response.status(400).json({ error: "imageId must reference your completed upload" });
   }
 
   const updatedBlog = await Blog.findByIdAndUpdate(
@@ -99,12 +111,14 @@ blogRouter.put("/:id", async (request, response) => {
     {
       title: body.title,
       content: body.content,
+      image,
       dateCreated: body.dateCreated,
       likes: body.likes ?? 0,
       comments: body.comments,
     },
-    { new: true },
+    { new: true, runValidators: true },
   );
+  await updatedBlog?.populate("image", imageFields);
   return updatedBlog
     ? response.json(updatedBlog.toJSON())
     : response.status(404).end();
