@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import blogRouter from "./controllers/blogs";
 import loginRouter from "./controllers/login";
 import usersRouter from "./controllers/users";
+import uploadsRouter from "./controllers/uploads";
 import config from "./utils/config";
 import logger from "./utils/logger";
 import middleware from "./utils/middleware";
@@ -37,6 +38,7 @@ app.get("/", (request, response) => {
 app.use("/api/blogs", blogRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/login", loginRouter);
+app.use("/api/uploads", uploadsRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

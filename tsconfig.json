@@ -16,6 +16,7 @@
     "index.ts",
     "controllers/**/*.ts",
     "models/**/*.ts",
+    "storage/**/*.ts",
     "utils/**/*.ts"
   ],
   "exclude": ["dist", "node_modules", "tests"]

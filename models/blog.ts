@@ -17,6 +17,10 @@ commentSchema.set("toJSON", {
 const blogSchema = new Schema({
   title: String,
   content: String,
+  image: {
+    type: Schema.Types.ObjectId,
+    ref: "Upload",
+  },
   dateCreated: Date,
   likes: Number,
   comments: [commentSchema],
